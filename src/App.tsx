@@ -1,26 +1,17 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+// src/WhatsApp.tsx
+import React, { useState } from "react";
+import Editor from "./components/Editor";
+import FileUpload from "./components/FileUpload";
 
-function App() {
+const WhatsApp: React.FC = () => {
+  const [editorValue, setEditorValue] = useState("");
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div className="flex flex-row justify-center items-center h-screen bg-gray-100">
+      <Editor updatePreview={(value) => setEditorValue(value)} />
+      <FileUpload editorValue={editorValue} />
     </div>
   );
-}
+};
 
-export default App;
+export default WhatsApp;
