@@ -3,12 +3,14 @@ import React, { useEffect, useState } from "react";
 import * as XLSX from "xlsx";
 import axios from "axios";
 import { renderPreview } from "./util";
+import QrCode from "./QrCode";
 
 interface FileUploadProps {
     editorValue: string
 }
 
 interface JsonRecord {
+    SerialNo: number;
     [key: string]: any;
     preview: string; // Added preview field
     isSend: boolean;
@@ -108,10 +110,10 @@ const FileUpload: React.FC<FileUploadProps> = ({ editorValue }) => {
                 json.isSend = false;
                 console.log("json", json);
                 return json;
-
             });
 
-            setJsonData(data);
+            const validData = data.filter((row) => !isNaN(row['number']))
+            setJsonData(validData);
             setErrorMessage(null);
         } else {
             setErrorMessage('Missing required headers.');
@@ -146,18 +148,25 @@ const FileUpload: React.FC<FileUploadProps> = ({ editorValue }) => {
         console.log("JSON Data:", jsonData);
         try {
             for (const json of jsonData) {
-                const response = await axios.post("https://30dc-2400-79e0-9070-28e8-907-43a0-d-ea76.ngrok-free.app/send-whatsapp-notification", {
-                    text: json.preview,
+                const response = await axios.post("http://localhost:3001/sendMessage", {
+                    messageText: json.preview,
                     senderList: [
                         {
                             name: json.name,
-                            number: json.number
+                            number: "65" + json.number
                         }
                     ]
                 });
                 console.log("Message sent:", response.data);
-                json.isSend = true;
-                setJsonData([...jsonData]); // Update the state with the new isSend value
+                const responseData = response.data;
+                const { notification_success, notification_failure } = responseData
+                if (notification_success.length > 0) {
+                    json.isSend = true;
+                    setJsonData([...jsonData]); // Update the state with the new isSend value
+                } else {
+                    console.log("notification_failure for:", notification_failure)
+                }
+
             }
         } catch (error) {
             console.error("Error sending message:", error);
@@ -168,18 +177,23 @@ const FileUpload: React.FC<FileUploadProps> = ({ editorValue }) => {
         <div
             className="m-4 bg-white p-6 rounded-lg shadow-md h-5/6 w-1/2"
             onDragOver={(e) => e.preventDefault()}
-            onDrop={handleFileDrop}
+
         >
-            <h1 className="text-2xl font-bold mb-4">Upload File</h1>
-
-            <div className="border-dashed border-2 border-gray-400 h-24 flex justify-center items-center">
-                {fileName ? <p className="text-gray-600">{fileName}</p> : <p className="text-gray-600">Drag and drop an Excel or CSV file here</p>}
+            <div>
+                <QrCode />
             </div>
+            <div onDrop={handleFileDrop}>
+                <h1 className="text-2xl font-bold mb-4">Upload File</h1>
 
-            {/* Error Message */}
-            {errorMessage && (
-                <p className="mt-4 text-red-500">{errorMessage}</p>
-            )}
+                <div className="border-dashed border-2 border-gray-400 h-24 flex justify-center items-center">
+                    {fileName ? <p className="text-gray-600">{fileName}</p> : <p className="text-gray-600">Drag and drop an Excel or CSV file here</p>}
+                </div>
+
+                {/* Error Message */}
+                {errorMessage && (
+                    <p className="mt-4 text-red-500">{errorMessage}</p>
+                )}
+            </div>
 
             {/* Render Table if data is present */}
             {jsonData.length > 0 && (
