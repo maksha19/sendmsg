@@ -175,30 +175,23 @@ const FileUpload: React.FC<FileUploadProps> = ({ editorValue }) => {
 
     return (
         <div
-            className="m-4 bg-white p-6 rounded-lg shadow-md h-5/6 w-1/2"
+            className="m-4 bg-white p-6 rounded-lg shadow-md h-5/6 w-1/2 overflow-hidden flex flex-col justify-between"
             onDragOver={(e) => e.preventDefault()}
-
         >
             <div>
                 <QrCode />
             </div>
             <div onDrop={handleFileDrop}>
                 <h1 className="text-2xl font-bold mb-4">Upload File</h1>
-
                 <div className="border-dashed border-2 border-gray-400 h-24 flex justify-center items-center">
                     {fileName ? <p className="text-gray-600">{fileName}</p> : <p className="text-gray-600">Drag and drop an Excel or CSV file here</p>}
                 </div>
-
-                {/* Error Message */}
                 {errorMessage && (
                     <p className="mt-4 text-red-500">{errorMessage}</p>
                 )}
             </div>
-
-            {/* Render Table if data is present */}
             {jsonData.length > 0 && (
-                <div className="mt-4 h-3/5 overflow-x-auto">
-
+                <div className="mt-4 h-3/5 overflow-x-auto max-h-[70vh]">
                     <table className="min-w-full border-collapse border border-gray-300">
                         <thead>
                             <tr className="bg-gray-200 sticky top-0">
@@ -222,12 +215,10 @@ const FileUpload: React.FC<FileUploadProps> = ({ editorValue }) => {
                                         ) : colIndex === 3 ?
                                             <td className="px-8  py-8 border">
                                                 {row.isSend ? (
-                                                    // Green tick icon for true
                                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-6 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                                                         <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                                                     </svg>
                                                 ) : (
-                                                    // Yellow waiting icon for false
                                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-6 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                                                         <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6 1a9 9 0 11-18 0 9 9 0 0118 0z" />
                                                     </svg>
@@ -239,16 +230,12 @@ const FileUpload: React.FC<FileUploadProps> = ({ editorValue }) => {
                                                 </td>
                                             )
                                     ))}
-                                    {/* Render the icon based on json.isSend value */}
-
                                 </tr>
                             ))}
                         </tbody>
                     </table>
-
                 </div>
             )}
-            {/* Display total count */}
             {jsonData.length > 0 && (
                 <div className="mt-4 flex justify-between items-center">
                     <p className="text-gray-600">
@@ -264,9 +251,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ editorValue }) => {
                     </div>
                 </div>
             )}
-
-            {/* Send button */}
-            <div className="bottom-0 left-0 right-0 p-4 bg-white">
+            <div className="mt-4">
                 <button
                     onClick={handleSend}
                     className="w-full bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors"
