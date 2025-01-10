@@ -13,3 +13,7 @@ export const renderPreview = (text: string) => {
 
     return { __html: formattedText }; // Return as HTML safe string
 };
+
+export const ACCESS_URL = 'https://5vjexmacua2rww6gz2xbkgq7u40bkdqm.lambda-url.ap-southeast-1.on.aws';
+
+export const RUN_ENGINE_URL = 'https://t3bavo6jfpyryiceh7cpxuo2uu0xlwix.lambda-url.ap-southeast-1.on.aws'

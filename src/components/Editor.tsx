@@ -35,54 +35,55 @@ const Editor: React.FC<EditorProps> = ({ updatePreview }) => {
     };
 
     return (
-        <div className="bg-white w-1/2 m-4 p-6 h-5/6 rounded-lg shadow-md ">
-            <h1 className="text-2xl font-bold mb-4">Custom Markdown Editor</h1>
+        <div className="bg-white m-4 p-8 rounded-xl shadow-lg">
+            <h1 className="text-2xl font-bold mb-6 text-center ">Message Editor</h1>
+
             {/* Formatting buttons */}
-            <>
-                <div className="mb-4 space-x-2">
-                    <button
-                        onClick={() => applyFormatting("bold")}
-                        className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-700"
-                    >
-                        Bold
-                    </button>
-                    <button
-                        onClick={() => applyFormatting("italic")}
-                        className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-700"
-                    >
-                        Italic
-                    </button>
-                    <button
-                        onClick={() => applyFormatting("strike")}
-                        className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-700"
-                    >
-                        Strikethrough
-                    </button>
-                </div>
-                {/* Flex container to show editor and preview side by side */}
-                <div className=" w-full ">
-                    {/* Textarea for editor input */}
-                    <textarea
-                        id="editor"
-                        className="w-full h-80 p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        value={editorValue}
-                        onChange={handleEditorChange}
-                        placeholder="Select text and click buttons to format..."
-                        onScroll={(e) => {
-                            const target = e.target as HTMLTextAreaElement;
-                            const previewElement = document.querySelector<HTMLDivElement>('.preview');
-                            if (previewElement) {
-                                previewElement.scrollTop = target.scrollTop;
-                            }
-                        }}
-                    />
-                    {/* Preview */}
-                    <div
-                        className="w-full mt-4 h-80 p-2 overflow-auto whitespace-pre-wrap bg-gray-100 border rounded-lg preview"
-                        dangerouslySetInnerHTML={renderPreview(editorValue)}>
-                    </div>
-                </div>
-            </>
+            <div className="flex  mb-6 space-x-4">
+                <button
+                    onClick={() => applyFormatting("bold")}
+                    className="px-6 py-3 bg-blue-500 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 transition"
+                >
+                    Bold
+                </button>
+                <button
+                    onClick={() => applyFormatting("italic")}
+                    className="px-6 py-3 bg-green-500 text-white font-semibold rounded-lg shadow-md hover:bg-green-700 transition"
+                >
+                    Italic
+                </button>
+                <button
+                    onClick={() => applyFormatting("strike")}
+                    className="px-6 py-3 bg-red-500 text-white font-semibold rounded-lg shadow-md hover:bg-red-700 transition"
+                >
+                    Strikethrough
+                </button>
+            </div>
+
+            {/* Editor and preview section */}
+            <div className="flex flex-col md:flex-row gap-6">
+                {/* Editor */}
+                <textarea
+                    id="editor"
+                    className="w-full h-80 p-4 border border-gray-300 rounded-lg shadow-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    value={editorValue}
+                    onChange={handleEditorChange}
+                    placeholder="Write your message here... Select text and click buttons to format."
+                    onScroll={(e) => {
+                        const target = e.target as HTMLTextAreaElement;
+                        const previewElement = document.querySelector<HTMLDivElement>('.preview');
+                        if (previewElement) {
+                            previewElement.scrollTop = target.scrollTop;
+                        }
+                    }}
+                />
+
+                {/* Preview */}
+                <div
+                    className="w-full h-80 p-4 overflow-auto bg-gray-50 border whitespace-pre-wrap  border-gray-300 rounded-lg shadow-inner preview text-gray-800"
+                    dangerouslySetInnerHTML={renderPreview(editorValue)}
+                />
+            </div>
         </div>
     );
 };

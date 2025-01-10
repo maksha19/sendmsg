@@ -1,16 +1,30 @@
 // src/WhatsApp.tsx
-import React, { useState } from "react";
-import Editor from "./components/Editor";
-import FileUpload from "./components/FileUpload";
+import React from "react";
+import LandingPage from "./components/LandingPage";
+import WorkBench from "./components/WorkBench";
+import { UserProvider } from "./context/userState";
+import { useUser } from './context/userState';
+import "slick-carousel/slick/slick.css";
+import "slick-carousel/slick/slick-theme.css";
+
 
 const WhatsApp: React.FC = () => {
-  const [editorValue, setEditorValue] = useState("");
-
   return (
-    <div className="flex flex-row justify-center items-center h-screen bg-gray-100">
-      <Editor updatePreview={(value) => setEditorValue(value)} />
-      <FileUpload editorValue={editorValue} />
-    </div>
+    <UserProvider>
+      <Content />
+    </UserProvider>
+  );
+};
+
+const Content: React.FC = () => {
+  const { user } = useUser();
+  return (
+    <>
+      {
+        user.email === '' ? <LandingPage /> : <WorkBench />
+
+      }
+    </>
   );
 };
 
