@@ -1,19 +1,21 @@
 // src/components/FileUpload.tsx
 import React, { useEffect, useState } from "react";
-import * as XLSX from "xlsx";
 import axios from "axios";
 import { renderPreview } from "./util";
 import QrCode from "./QrCode";
 
 interface FileUploadProps {
     editorValue: string
+    instanceURL: string
+    jsonData: JsonRecord[]
+    supportingFile: supportingFile | undefined
 }
 
 interface JsonRecord {
     SerialNo: number;
     [key: string]: any;
     preview: string; // Added preview field
-    isSend: boolean;
+    isSend?: boolean;
 }
 
 interface supportingFile {
@@ -22,15 +24,10 @@ interface supportingFile {
     file: string;
 }
 
-const FileUpload: React.FC<FileUploadProps> = ({ editorValue }) => {
+const FileUpload: React.FC<FileUploadProps> = ({ editorValue, instanceURL, jsonData, supportingFile }) => {
     const [whatsAppStatus, setWhatsAppStatus] = useState<boolean>(false)
-    const [fileName, setFileName] = useState<string>("");
-    const [supportingFile, setSupportingFile] = useState<supportingFile>();
-    const [jsonData, setJsonData] = useState<JsonRecord[]>([]);
-    const [errorMessage, setErrorMessage] = useState<string | null>(null);
-    const [supportingFileError, setSupportingFileError] = useState<string | null>(null);
+    const [updatedJsonData, setUpdatedJsonData] = useState<JsonRecord[]>([]);
     const [expandAll, setExpandAll] = useState<boolean>(false);
-    const [instanceURL, setInstanceURL] = useState('')
 
     useEffect(() => {
         updatePreview(editorValue);
@@ -38,98 +35,6 @@ const FileUpload: React.FC<FileUploadProps> = ({ editorValue }) => {
     }, [editorValue]);
 
     // TODO: start timer when whatsAppStatus is true and infor to backend
-
-    // Handle file drop
-    const handleFileDrop = (e: React.DragEvent<HTMLDivElement>) => {
-        e.preventDefault();
-        const file = e.dataTransfer.files[0];
-        if (file) {
-            const fileType = file.name.split('.').pop();
-            setFileName(file.name);
-            if (fileType === 'csv' || fileType === 'xlsx') {
-                parseFile(file);
-            } else {
-                setErrorMessage('Only CSV and Excel files are allowed.');
-            }
-        }
-    };
-
-    // Parse file based on file type
-    const parseFile = (file: File) => {
-        const reader = new FileReader();
-        const fileType = file.name.split('.').pop();
-
-        reader.onload = (e: ProgressEvent<FileReader>) => {
-            const data = e.target?.result;
-
-            if (fileType === 'xlsx' && typeof data === 'string') {
-                parseExcelFile(data);
-            } else if (fileType === 'csv' && typeof data === 'string') {
-                parseCSVFile(data);
-            }
-        };
-
-        if (fileType === 'xlsx') {
-            reader.readAsBinaryString(file);
-        } else if (fileType === 'csv') {
-            reader.readAsText(file);
-        }
-    };
-
-    // Parse Excel File
-    const parseExcelFile = (binaryStr: string) => {
-        setJsonData([]);
-        try {
-            const workbook = XLSX.read(binaryStr, { type: 'binary' });
-            const firstSheetName = workbook.SheetNames[0];
-            const worksheet = workbook.Sheets[firstSheetName];
-            const rows: any = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-
-            handleParsedData(rows);
-        } catch (error) {
-            setErrorMessage('Error reading Excel file.');
-        }
-    };
-
-    // Parse CSV File
-    const parseCSVFile = (csvText: string) => {
-        setJsonData([]);
-        const rows = csvText.split('\n').map((row) => row.split(',').map((cell) => cell.trim()));
-        handleParsedData(rows);
-    };
-
-    // Handle parsed data from file
-    const handleParsedData = (rows: any[][]) => {
-        if (rows.length === 0) {
-            setErrorMessage('The file is empty or invalid.');
-            return;
-        }
-
-        const headers = rows[0].map((header) => header.trim());
-        const dataRows = rows.slice(1);
-
-        // Check if headers are valid
-        if (!headers.includes('isSend')) {
-            const data = dataRows.map((row) => {
-                const json: JsonRecord = row.reduce((acc, value, index) => {
-                    acc[headers[index]] = value;
-                    return acc;
-                }, {} as JsonRecord);
-
-                // Add default isSend value
-                json.preview = editorValue || ""; // Initialize preview field
-                json.isSend = false;
-                console.log("json", json);
-                return json;
-            });
-
-            const validData = data.filter((row) => !isNaN(row['number']))
-            setJsonData(validData);
-            setErrorMessage(null);
-        } else {
-            setErrorMessage('Missing required headers.');
-        }
-    };
 
     // Update preview based on editor value and replace placeholders
     const updatePreview = (editorValue: string) => {
@@ -147,36 +52,10 @@ const FileUpload: React.FC<FileUploadProps> = ({ editorValue }) => {
                 console.warn(`Placeholder {${trimmedKey}} not found in row`); // Warn for missing keys
                 return `{${trimmedKey}}`; // Return placeholder if key is not found
             });
-            return { ...row, preview };
+            return { ...row, preview, isSend: false };
         });
-        setJsonData(updatedData);
+        setUpdatedJsonData(updatedData);
     };
-
-    // Handle image or PDF file upload and convert to base64
-    const handleFileUpload = (e: any) => {
-
-        const file = e.target.files?.[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                if (reader.result) {
-                    const base64String = reader.result.toString().split(',')[1];
-                    console.log("Base64 String:", base64String);
-                    // Save file name, mime type, and base64 string to state
-                    setSupportingFile({
-                        fileName: file.name,
-                        fileType: file.type,
-                        file: base64String
-                    });
-                }
-            };
-            reader.readAsDataURL(file);
-        }
-        else {
-            setSupportingFileError('Only Image and PDF files are allowed.');
-        }
-    };
-
 
 
     const handleSend = async () => {
@@ -187,7 +66,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ editorValue }) => {
                 fileInfo = { ...supportingFile }
             }
             // TODO: send total data information
-            for (const json of jsonData) {
+            for (const json of updatedJsonData) {
                 // TODO: batch data info successfully and failure information to backend
                 const response = await axios.post("https://t3bavo6jfpyryiceh7cpxuo2uu0xlwix.lambda-url.ap-southeast-1.on.aws//dev/message", {
                     "action": "sendMessage",
@@ -208,7 +87,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ editorValue }) => {
                 const { notification_success, notification_failure } = responseData.messageResponse
                 if (notification_success.length > 0) {
                     json.isSend = true;
-                    setJsonData([...jsonData]); // Update the state with the new isSend value
+                    setUpdatedJsonData([...jsonData]); // Update the state with the new isSend value
                 } else {
                     console.log("notification_failure for:", notification_failure)
                 }
@@ -224,63 +103,13 @@ const FileUpload: React.FC<FileUploadProps> = ({ editorValue }) => {
             onDragOver={(e) => e.preventDefault()}
         >
             {/* QR Code Section */}
-            <div className="flex  mb-6">
-                <QrCode updateInstanceURL={(value: string) => setInstanceURL(value)} updateWhatsAppStatus={(value: boolean) => setWhatsAppStatus(value)} />
+            <div className="flex w-full  mb-6">
+                <QrCode instanceURL={instanceURL} updateWhatsAppStatus={(value: boolean) => setWhatsAppStatus(value)} />
             </div>
 
-            {/* File Upload Section */}
-            <div className="flex justify-between space-x-4">
-                <div
-                    className="flex flex-col items-center border-dashed border-2 border-blue-400 rounded-lg p-6 cursor-pointer transition hover:bg-blue-50 w-1/2"
-                    onDrop={handleFileDrop}
-                    onClick={() => document.getElementById('fileInput')?.click()}
-                >
-                    <h1 className="text-2xl font-semibold text-blue-600 mb-4">Upload Contact Number File</h1>
-                    <input
-                        id="fileInput"
-                        type="file"
-                        accept=".csv, .xlsx"
-                        style={{ display: 'none' }}
-                        onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            if (file) {
-                                const fileType = file.name.split('.').pop();
-                                setFileName(file.name);
-                                if (fileType === 'csv' || fileType === 'xlsx') {
-                                    parseFile(file);
-                                } else {
-                                    setErrorMessage('Only CSV and Excel files are allowed.');
-                                }
-                            }
-                        }}
-                    />
-                    <div className="w-full flex items-center justify-center h-24 text-gray-600">
-                        {fileName ? <p>{fileName}</p> : <p>Drag and drop a CSV or Excel file here</p>}
-                    </div>
-                    {errorMessage && <p className="mt-4 text-red-500">{errorMessage}</p>}
-                </div>
-                {/* Image/PDF Upload Section */}
-                <div
-                    className="flex flex-col items-center border-dashed border-2 border-green-400 rounded-lg p-6 cursor-pointer transition hover:bg-green-50 w-1/2"
-                    onClick={() => document.getElementById('imagePdfInput')?.click()}
-                >
-                    <h1 className="text-2xl font-semibold text-green-600 mb-4">Upload Image/PDF<span className="text-lg">(Optional)</span></h1>
-                    <input
-                        id="imagePdfInput"
-                        type="file"
-                        accept=".jpg, .jpeg, .png, .pdf"
-                        style={{ display: 'none' }}
-                        onChange={(e) => handleFileUpload(e)}
-                    />
-                    <div className="w-full flex items-center justify-center h-24 text-gray-600">
-                        {supportingFile?.fileName ? <p>{supportingFile.fileName}</p> : <p>Click to upload an Image or PDF file</p>}
-                    </div>
-                    {supportingFileError && <p className="mt-4 text-red-500">{supportingFileError}</p>}
-                </div>
-            </div>
 
             {/* Table Section */}
-            {jsonData.length > 0 && (
+            {updatedJsonData.length > 0 && (
                 <>
                     <div className="mt-6 overflow-x-auto max-h-[70vh]">
                         <table className="min-w-full border-collapse border border-gray-300">

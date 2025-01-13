@@ -6,15 +6,14 @@ import { RUN_ENGINE_URL } from '../components/util';
 
 interface QrCodeProps {
     updateWhatsAppStatus: (value: boolean) => void;
-    updateInstanceURL: (value: string) => void;
+    instanceURL: string
 }
 
 
-const QrCode: React.FC<QrCodeProps> = ({ updateWhatsAppStatus, updateInstanceURL }) => {
+const QrCode: React.FC<QrCodeProps> = ({ updateWhatsAppStatus, instanceURL }) => {
     const [value, setValue] = useState('');
     const [showModel, setShowModel] = useState(false)
     const [instanceStatus, setInstanceStatus] = useState<"Online" | "Offline" | "Processing">('Offline')
-    const [instanceURL, setInstanceURL] = useState('')
     const instanceURLRef = useRef(instanceURL);
     const [isEngineStarted, setIsEngineStarted] = useState(false)
     const { user } = useUser()
@@ -117,53 +116,11 @@ const QrCode: React.FC<QrCodeProps> = ({ updateWhatsAppStatus, updateInstanceURL
         pollLoginStatus(); // Start polling
     };
 
-    const getInstanceStatus = async (instanceId: string) => {
-
-        const response = await axios.post(`${RUN_ENGINE_URL}/dev/message`, {
-            "action": "status",
-            "userId": user.email,
-            instanceId
-        });
-
-        if (response.status === 200 && response.data) {
-            const { statusCode } = response.data
-            if (statusCode === 201) {
-                console.log('got getInstanceStatus and publicUrl', response.data.publicUrl)
-                setInstanceStatus("Online")
-                setIsEngineStarted(false);
-                setInstanceURL(response.data.publicUrl)
-                updateInstanceURL(response.data.publicUrl)
-                setShowModel(true)
-                setTimeout(() => fetchQrCode(), 45000);
-            }
-        }
-    }
-
-    const startInstance = async () => {
-        try {
-            const response = await axios.post(`${RUN_ENGINE_URL}/dev/message`, {
-                "action": "create",
-                "userId": user.email
-            });
-
-            if (response.status === 200 && response.data) {
-                const { statusCode, instanceId } = response.data;
-                if (statusCode === 200) {
-                    console.log("Successfully started instance:", instanceId);
-                    setInstanceStatus("Processing");
-                    setTimeout(() => getInstanceStatus(instanceId), 5000);
-                }
-            }
-        } catch (error) {
-            console.error('Error starting/stopping instance:', error);
-        }
-    }
-
     const startStopEngine = async () => {
 
         if (instanceStatus === "Offline") {
             setIsEngineStarted(true);
-            await startInstance()
+            await fetchQrCode()
             return
         }
         const response = await axios.post(`${RUN_ENGINE_URL}/dev/message`, {
@@ -174,22 +131,23 @@ const QrCode: React.FC<QrCodeProps> = ({ updateWhatsAppStatus, updateInstanceURL
         if (response.status === 200 && !response.data.loginStatus) {
             setInstanceStatus("Offline")
             setValue("")
-            setInstanceURL('')
         }
 
     }
 
     return (
-        <div className="">
-            <div className='flex justify-between items-center '>
-                <h1 className="text-xl  font-bold">Status: {instanceStatus} </h1>
-                <button
-                    className={`text-white m-2 font-bold py-2 px-4 rounded-full ${instanceStatus === "Offline" ? "bg-green-500 hover:bg-green-700" : "bg-red-500 hover:bg-red-700"}`}
-                    onClick={() => startStopEngine()}
-                    disabled={isEngineStarted}
-                >
-                    {instanceStatus === "Offline" ? "START" : "LOGOUT"}
-                </button>
+        <div className='w-full'>
+            <div className='flex w-full items-center'>
+                <h1 className="text-xl font-bold">Status: {instanceStatus} </h1>
+                <div className="ml-auto">
+                    <button
+                        className={`text-white m-2 font-bold py-2 px-4 rounded-full ${instanceStatus === "Offline" ? "bg-green-500 hover:bg-green-700" : "bg-red-500 hover:bg-red-700"}`}
+                        onClick={() => startStopEngine()}
+                        disabled={isEngineStarted}
+                    >
+                        {instanceStatus === "Offline" ? "START" : "LOGOUT"}
+                    </button>
+                </div>
             </div>
 
             {showModel &&
