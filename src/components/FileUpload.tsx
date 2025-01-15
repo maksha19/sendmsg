@@ -9,6 +9,7 @@ interface FileUploadProps {
     instanceURL: string
     jsonData: JsonRecord[]
     supportingFile: supportingFile | undefined
+    instanceId: string
 }
 
 interface JsonRecord {
@@ -24,7 +25,7 @@ interface supportingFile {
     file: string;
 }
 
-const FileUpload: React.FC<FileUploadProps> = ({ editorValue, instanceURL, jsonData, supportingFile }) => {
+const FileUpload: React.FC<FileUploadProps> = ({ editorValue, instanceURL, jsonData, supportingFile, instanceId }) => {
     const [whatsAppStatus, setWhatsAppStatus] = useState<boolean>(false)
     const [updatedJsonData, setUpdatedJsonData] = useState<JsonRecord[]>([]);
     const [expandAll, setExpandAll] = useState<boolean>(false);
@@ -43,23 +44,23 @@ const FileUpload: React.FC<FileUploadProps> = ({ editorValue, instanceURL, jsonD
 
         const updatedData = jsonData.map((row) => {
             // Replace each placeholder with the corresponding value from the row
-            let preview = editorValue.replace(/{(.*?)}/g, (_, key) => {
-                const trimmedKey = key.trim();
-                if (row[trimmedKey] !== undefined) {
-                    console.log(`Replacing {${trimmedKey}} with ${row[trimmedKey]}`); // Log replacements
-                    return row[trimmedKey]; // Replace with the actual value
-                }
-                console.warn(`Placeholder {${trimmedKey}} not found in row`); // Warn for missing keys
-                return `{${trimmedKey}}`; // Return placeholder if key is not found
-            });
-            return { ...row, preview, isSend: false };
+            // let preview = editorValue.replace(/{(.*?)}/g, (_, key) => {
+            //     const trimmedKey = key.trim();
+            //     if (row[trimmedKey] !== undefined) {
+            //         console.log(`Replacing {${trimmedKey}} with ${row[trimmedKey]}`); // Log replacements
+            //         return row[trimmedKey]; // Replace with the actual value
+            //     }
+            //     console.warn(`Placeholder {${trimmedKey}} not found in row`); // Warn for missing keys
+            //     return `{${trimmedKey}}`; // Return placeholder if key is not found
+            // });
+            return { ...row, isSend: false };
         });
         setUpdatedJsonData(updatedData);
     };
 
 
     const handleSend = async () => {
-        console.log("JSON Data:", jsonData);
+        console.log("JSON Data:", updatedJsonData);
         try {
             let fileInfo = {};
             if (supportingFile) {
@@ -87,7 +88,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ editorValue, instanceURL, jsonD
                 const { notification_success, notification_failure } = responseData.messageResponse
                 if (notification_success.length > 0) {
                     json.isSend = true;
-                    setUpdatedJsonData([...jsonData]); // Update the state with the new isSend value
+                    setUpdatedJsonData([...updatedJsonData]); // Update the state with the new isSend value
                 } else {
                     console.log("notification_failure for:", notification_failure)
                 }
@@ -104,7 +105,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ editorValue, instanceURL, jsonD
         >
             {/* QR Code Section */}
             <div className="flex w-full  mb-6">
-                <QrCode instanceURL={instanceURL} updateWhatsAppStatus={(value: boolean) => setWhatsAppStatus(value)} />
+                <QrCode instanceURL={instanceURL} instanceId={instanceId} updateWhatsAppStatus={(value: boolean) => setWhatsAppStatus(value)} />
             </div>
 
 
@@ -115,7 +116,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ editorValue, instanceURL, jsonD
                         <table className="min-w-full border-collapse border border-gray-300">
                             <thead className="sticky top-0 bg-blue-100">
                                 <tr>
-                                    {Object.keys(jsonData[0]).map((header) => (
+                                    {Object.keys(updatedJsonData[0]).map((header) => (
                                         <th key={header} className="px-4 py-2 text-blue-600 font-semibold border">
                                             {header}
                                         </th>
@@ -123,7 +124,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ editorValue, instanceURL, jsonD
                                 </tr>
                             </thead>
                             <tbody>
-                                {jsonData.map((row, rowIndex) => (
+                                {updatedJsonData.map((row, rowIndex) => (
                                     <tr key={rowIndex} className="hover:bg-blue-50 transition">
                                         {Object.values(row).map((value, colIndex) =>
                                             colIndex === 2 ? (

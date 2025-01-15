@@ -21,11 +21,12 @@ interface EditorProps {
     updateEngineStatus: (value: string) => void;
     updateJsonData: (value: JsonRecord[]) => void;
     updateSupportingDocs: (value: supportingFile) => void;
+    updateInstanceId: (value: string) => void;
 }
 
 
 
-const Editor: React.FC<EditorProps> = ({ updatePreview, updateEngineStatus, updateJsonData, updateSupportingDocs }) => {
+const Editor: React.FC<EditorProps> = ({ updatePreview, updateEngineStatus, updateJsonData, updateSupportingDocs, updateInstanceId }) => {
     const [editorValue, setEditorValue] = useState("");
     const [expandAll, setExpandAll] = useState<boolean>(false);
     const [fileName, setFileName] = useState<string>("");
@@ -152,7 +153,12 @@ const Editor: React.FC<EditorProps> = ({ updatePreview, updateEngineStatus, upda
     const parseCSVFile = (csvText: string) => {
         setJsonData([]);
         const rows = csvText.split('\n').map((row) => row.split(',').map((cell) => cell.trim()));
-        handleParsedData(rows);
+        try {
+            handleParsedData(rows);
+        } catch (e) {
+            setErrorMessage('Error reading csv file. ')
+        }
+
     };
 
     // Handle parsed data from file
@@ -164,6 +170,7 @@ const Editor: React.FC<EditorProps> = ({ updatePreview, updateEngineStatus, upda
 
         const headers = rows[0].map((header) => header.trim());
         const dataRows = rows.slice(1);
+        console.log("headers", headers)
 
         // Check if headers are valid
         if (!headers.includes('isSend')) {
@@ -175,11 +182,15 @@ const Editor: React.FC<EditorProps> = ({ updatePreview, updateEngineStatus, upda
 
                 // Add default isSend value
                 json.preview = editorValue || ""; // Initialize preview field
-                console.log("json", json);
+                json.number = isNaN(json['number']) ? json['number'].replace(/\s/g, "") : json['number'];
                 return json;
             });
 
             const validData = data.filter((row) => !isNaN(row['number']))
+            const invalidData = data.filter((row) => isNaN(row['number']))
+            console.log("row from file", data);
+            console.log("invalid data", invalidData)
+            console.log("validData", validData);
             setJsonData(validData);
             updateJsonData(validData);
             setErrorMessage(null);
@@ -238,6 +249,7 @@ const Editor: React.FC<EditorProps> = ({ updatePreview, updateEngineStatus, upda
                 const { statusCode, instanceId } = response.data;
                 if (statusCode === 200) {
                     console.log("Successfully started instance:", instanceId);
+                    updateInstanceId(instanceId)
                     setTimeout(() => getInstanceStatus(instanceId), 5000);
                 }
             }
@@ -523,7 +535,7 @@ const Editor: React.FC<EditorProps> = ({ updatePreview, updateEngineStatus, upda
                         {supportingFile?.fileType === 'application/pdf' ? (
                             <embed src={`data:application/pdf;base64,${supportingFile.file}`} type="application/pdf" width="100%" height="600px" />
                         ) : (
-                            <img src={`data:${supportingFile?.fileType};base64,${supportingFile?.file}`} alt="Preview" className="w-full h-auto" />
+                            <img src={`data:${supportingFile?.fileType};base64,${supportingFile?.file}`} alt="Preview" className="w-full h-[700px]" />
                         )}
                         <button
                             onClick={() => setShowSupportingFilePreview(false)}

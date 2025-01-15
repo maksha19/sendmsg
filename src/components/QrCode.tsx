@@ -7,10 +7,11 @@ import { RUN_ENGINE_URL } from '../components/util';
 interface QrCodeProps {
     updateWhatsAppStatus: (value: boolean) => void;
     instanceURL: string
+    instanceId: string
 }
 
 
-const QrCode: React.FC<QrCodeProps> = ({ updateWhatsAppStatus, instanceURL }) => {
+const QrCode: React.FC<QrCodeProps> = ({ updateWhatsAppStatus, instanceURL, instanceId }) => {
     const [value, setValue] = useState('');
     const [showModel, setShowModel] = useState(false)
     const [instanceStatus, setInstanceStatus] = useState<"Online" | "Offline" | "Processing">('Offline')
@@ -21,6 +22,8 @@ const QrCode: React.FC<QrCodeProps> = ({ updateWhatsAppStatus, instanceURL }) =>
     useEffect(() => {
         instanceURLRef.current = instanceURL;
     }, [instanceURL]);
+
+    console.log("instanceId-qrcode", instanceId)
 
     const fetchQrCode = async () => {
         const getMsgQrCode = async () => {
@@ -36,6 +39,7 @@ const QrCode: React.FC<QrCodeProps> = ({ updateWhatsAppStatus, instanceURL }) =>
                     if (data.qrCode !== "") {
                         console.log('QR Code set state:', data.qrCode);
                         setValue(data.qrCode);
+                        setShowModel(true);
                         return true;
                     } else {
                         return false;
@@ -100,6 +104,8 @@ const QrCode: React.FC<QrCodeProps> = ({ updateWhatsAppStatus, instanceURL }) =>
                 const isOnline = await checkLoginStatus();
                 if (isOnline) {
                     updateWhatsAppStatus(true)
+                    setInstanceStatus("Online")
+                    setIsEngineStarted(false);
                     console.log("Login status confirmed. Exiting loop.");
                     return; // Exit the loop once login status is confirmed
                 }
@@ -120,13 +126,15 @@ const QrCode: React.FC<QrCodeProps> = ({ updateWhatsAppStatus, instanceURL }) =>
 
         if (instanceStatus === "Offline") {
             setIsEngineStarted(true);
+            setInstanceStatus("Processing")
             await fetchQrCode()
             return
         }
         const response = await axios.post(`${RUN_ENGINE_URL}/dev/message`, {
             "action": "logout",
             "userId": user.email,
-            "publicUrl": instanceURLRef.current
+            "publicUrl": instanceURLRef.current,
+            "instanceId": instanceId
         });
         if (response.status === 200 && !response.data.loginStatus) {
             setInstanceStatus("Offline")

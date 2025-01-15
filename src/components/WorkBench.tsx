@@ -18,7 +18,8 @@ const WorkBench: React.FC = () => {
     const [instanceURL, setInstanceURL] = useState("")
     const [jsonData, setJsonData] = useState<JsonRecord[]>([]);
     const [supportingFiles, setSupportingFiles] = useState<supportingFile>();
-
+    const [instanceId, setInstanceId] = useState<string>("");
+    console.log("instanceURL-worker", instanceId)
     return (
         <div className="flex flex-row justify-center items-center h-screen bg-gray-100">
             <SideNavigation />
@@ -28,8 +29,9 @@ const WorkBench: React.FC = () => {
                         <Editor updatePreview={(value) => setEditorValue(value)}
                             updateJsonData={(value => setJsonData(value))}
                             updateSupportingDocs={(value) => setSupportingFiles(value)}
-                            updateEngineStatus={(value) => setInstanceURL(value)} /> :
-                        <FileUpload editorValue={editorValue} instanceURL={instanceURL} jsonData={jsonData} supportingFile={supportingFiles} />
+                            updateEngineStatus={(value) => setInstanceURL(value)}
+                            updateInstanceId={(value) => setInstanceId(value)} /> :
+                        <FileUpload editorValue={editorValue} instanceURL={instanceURL} instanceId={instanceId} jsonData={jsonData} supportingFile={supportingFiles} />
                 }
 
 
