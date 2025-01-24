@@ -178,9 +178,15 @@ const FileUpload: React.FC<FileUploadProps> = ({ editorValue }) => {
     };
 
 
+    function sleep(ms: any) {
+        return new Promise((resolve) => {
+            setTimeout(resolve, ms);
+        });
+    }
 
     const handleSend = async () => {
         console.log("JSON Data:", jsonData);
+        setWhatsAppStatus(true)
         try {
             let fileInfo = {};
             if (supportingFile) {
@@ -188,24 +194,22 @@ const FileUpload: React.FC<FileUploadProps> = ({ editorValue }) => {
             }
             // TODO: send total data information
             for (const json of jsonData) {
+                await sleep(500)
                 // TODO: batch data info successfully and failure information to backend
-                const response = await axios.post("https://t3bavo6jfpyryiceh7cpxuo2uu0xlwix.lambda-url.ap-southeast-1.on.aws//dev/message", {
-                    "action": "sendMessage",
-                    "publicUrl": instanceURL,
-                    "message": {
-                        messageText: json.preview,
-                        senderList: [
-                            {
-                                name: json.name,
-                                number: "65" + json.number
-                            }
-                        ],
-                        ...fileInfo
-                    }
+                const response = await axios.post("http://localhost:3001/sendMessage", {
+
+                    messageText: json.preview,
+                    senderList: [
+                        {
+                            name: json.name,
+                            number: "65" + json.number
+                        }
+                    ],
+                    "file": "file-test"
                 });
                 const responseData = response.data;
                 console.log("Message sent:", responseData);
-                const { notification_success, notification_failure } = responseData.messageResponse
+                const { notification_success, notification_failure } = responseData
                 if (notification_success.length > 0) {
                     json.isSend = true;
                     setJsonData([...jsonData]); // Update the state with the new isSend value
@@ -213,8 +217,10 @@ const FileUpload: React.FC<FileUploadProps> = ({ editorValue }) => {
                     console.log("notification_failure for:", notification_failure)
                 }
             }
+            setWhatsAppStatus(false)
         } catch (error) {
             console.error("Error sending message:", error);
+            setWhatsAppStatus(false)
         }
     };
 
@@ -224,9 +230,9 @@ const FileUpload: React.FC<FileUploadProps> = ({ editorValue }) => {
             onDragOver={(e) => e.preventDefault()}
         >
             {/* QR Code Section */}
-            <div className="flex  mb-6">
+            {/* <div className="flex  mb-6">
                 <QrCode updateInstanceURL={(value: string) => setInstanceURL(value)} updateWhatsAppStatus={(value: boolean) => setWhatsAppStatus(value)} />
-            </div>
+            </div> */}
 
             {/* File Upload Section */}
             <div className="flex justify-between space-x-4">
@@ -357,8 +363,8 @@ const FileUpload: React.FC<FileUploadProps> = ({ editorValue }) => {
             <div className="mt-6">
                 <button
                     onClick={() => handleSend()}
-                    className={`w-full py-3 rounded-lg transition ${!whatsAppStatus ? "bg-gray-400 cursor-not-allowed" : "bg-blue-500 hover:bg-blue-600 text-white"}`}
-                    disabled={!whatsAppStatus}
+                    className={`w-full py-3 rounded-lg transition ${whatsAppStatus ? "bg-gray-400 cursor-not-allowed" : "bg-blue-500 hover:bg-blue-600 text-white"}`}
+                    disabled={whatsAppStatus}
                 >
                     Send
                 </button>

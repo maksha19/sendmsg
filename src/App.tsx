@@ -21,7 +21,7 @@ const Content: React.FC = () => {
   return (
     <>
       {
-        user.email === '' ? <LandingPage /> : <WorkBench />
+        user.email !== '' ? <LandingPage /> : <WorkBench />
 
       }
     </>
