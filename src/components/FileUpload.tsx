@@ -16,7 +16,7 @@ interface JsonRecord {
     SerialNo: number;
     [key: string]: any;
     preview: string; // Added preview field
-    isSend?: boolean;
+    status?: boolean;
 }
 
 interface supportingFile {
@@ -26,7 +26,7 @@ interface supportingFile {
 }
 
 const FileUpload: React.FC<FileUploadProps> = ({ editorValue, instanceURL, jsonData, supportingFile, instanceId }) => {
-    const [whatsAppStatus, setWhatsAppStatus] = useState<boolean>(false)
+    const [whatsAppStatus, setWhatsAppStatus] = useState<boolean>(true)
     const [updatedJsonData, setUpdatedJsonData] = useState<JsonRecord[]>([]);
     const [expandAll, setExpandAll] = useState<boolean>(false);
 
@@ -53,7 +53,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ editorValue, instanceURL, jsonD
             //     console.warn(`Placeholder {${trimmedKey}} not found in row`); // Warn for missing keys
             //     return `{${trimmedKey}}`; // Return placeholder if key is not found
             // });
-            return { ...row, isSend: false };
+            return { ...row, status: false };
         });
         setUpdatedJsonData(updatedData);
     };
@@ -87,8 +87,8 @@ const FileUpload: React.FC<FileUploadProps> = ({ editorValue, instanceURL, jsonD
                 console.log("Message sent:", responseData);
                 const { notification_success, notification_failure } = responseData.messageResponse
                 if (notification_success.length > 0) {
-                    json.isSend = true;
-                    setUpdatedJsonData([...updatedJsonData]); // Update the state with the new isSend value
+                    json.status = true;
+                    setUpdatedJsonData([...updatedJsonData]); // Update the state with the new status value
                 } else {
                     console.log("notification_failure for:", notification_failure)
                 }
@@ -118,7 +118,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ editorValue, instanceURL, jsonD
                                 <tr>
                                     {Object.keys(updatedJsonData[0]).map((header) => (
                                         <th key={header} className="px-4 py-2 text-blue-600 font-semibold border">
-                                            {header}
+                                            <span className="capitalize">{header}</span>
                                         </th>
                                     ))}
                                 </tr>
@@ -137,7 +137,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ editorValue, instanceURL, jsonD
                                                 </td>
                                             ) : colIndex === 3 ? (
                                                 <td key={colIndex} className="px-6 py-6 border flex justify-center text-center">
-                                                    {row.isSend ? (
+                                                    {row.status ? (
                                                         <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                                                             <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                                                         </svg>
