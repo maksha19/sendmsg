@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { renderPreview } from "./util";
 import QrCode from "./QrCode";
+import QRCodeGenerator from 'qrcode';
 
 interface FileUploadProps {
     editorValue: string
@@ -58,6 +59,10 @@ const FileUpload: React.FC<FileUploadProps> = ({ editorValue, instanceURL, jsonD
         setUpdatedJsonData(updatedData);
     };
 
+    const getQRcode = async (mobile: string) => {
+        const dataUrl = await QRCodeGenerator.toDataURL(mobile, { type: 'image/jpeg', width:512,margin: 2 });
+        return dataUrl.split(',')[1]
+    }
 
     const handleSend = async () => {
         console.log("JSON Data:", updatedJsonData);
@@ -69,7 +74,13 @@ const FileUpload: React.FC<FileUploadProps> = ({ editorValue, instanceURL, jsonD
             // TODO: send total data information
             for (const json of updatedJsonData) {
                 // TODO: batch data info successfully and failure information to backend
-                const response = await axios.post("https://t3bavo6jfpyryiceh7cpxuo2uu0xlwix.lambda-url.ap-southeast-1.on.aws//dev/message", {
+                const ticketQR =  await getQRcode(json.number)
+                let ticketInfo = {
+                    fileName: "ticket.jpeg",
+                    fileType: "image/jpeg",
+                    file: ticketQR
+                }
+                const response = await axios.post("https://t3bavo6jfpyryiceh7cpxuo2uu0xlwix.lambda-url.ap-southeast-1.on.aws/dev/message", {
                     "action": "sendMessage",
                     "publicUrl": instanceURL,
                     "message": {
@@ -80,7 +91,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ editorValue, instanceURL, jsonD
                                 number: "65" + json.number
                             }
                         ],
-                        ...fileInfo
+                        ...ticketInfo
                     }
                 });
                 const responseData = response.data;
