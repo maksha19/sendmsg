@@ -4,6 +4,7 @@ import * as XLSX from "xlsx";
 import axios from "axios";
 import { renderPreview } from "./util";
 import QrCode from "./QrCode";
+import QRCodeGenerator from 'qrcode';
 
 interface FileUploadProps {
     editorValue: string
@@ -177,6 +178,10 @@ const FileUpload: React.FC<FileUploadProps> = ({ editorValue }) => {
         }
     };
 
+    const getQRcode = async (mobile: string) => {
+        const dataUrl = await QRCodeGenerator.toDataURL(mobile, { type: 'image/jpeg', width:512,margin: 2 });
+        return dataUrl.split(',')[1]
+    }
 
     function sleep(ms: any) {
         return new Promise((resolve) => {
@@ -195,6 +200,12 @@ const FileUpload: React.FC<FileUploadProps> = ({ editorValue }) => {
             // TODO: send total data information
             for (const json of jsonData) {
                 await sleep(500)
+                const ticketQR =  await getQRcode(json.number)
+                let ticketInfo = {
+                    fileName: "ticket.jpeg",
+                    fileType: "image/jpeg",
+                    file: ticketQR
+                }
                 // TODO: batch data info successfully and failure information to backend
                 const response = await axios.post("http://localhost:3001/sendMessage", {
 
@@ -205,7 +216,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ editorValue }) => {
                             number: "65" + json.number
                         }
                     ],
-                    "file": "file-test"
+                    ...ticketInfo
                 });
                 const responseData = response.data;
                 console.log("Message sent:", responseData);
