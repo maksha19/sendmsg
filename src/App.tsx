@@ -22,7 +22,7 @@ const Content: React.FC = () => {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<LandingPage />} />
+        <Route path="/sendmsg" element={<LandingPage />} />
         <Route path="/home" element={<HomePage />} />
       </Routes>
     </Router>
