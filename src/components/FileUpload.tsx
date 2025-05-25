@@ -216,7 +216,6 @@ const FileUpload: React.FC<FileUploadProps> = ({ editorValue }) => {
                             number: "65" + json.number
                         }
                     ],
-                    ...ticketInfo
                 });
                 const responseData = response.data;
                 console.log("Message sent:", responseData);
