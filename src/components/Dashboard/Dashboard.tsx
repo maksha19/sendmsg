@@ -4,13 +4,21 @@ import { MessageCircle, ListOrdered, Paperclip, Send, Clock, CircleX, Eye, Chevr
 import { Card } from "../Card";
 import { renderPreview } from "../util";
 import { NumberListModal } from "./NumberListModal";
+import { QRCodeSVG } from "qrcode.react";
 
 export default function Dashboard() {
     const [numberList, setNumberList] = useState<string[] | null>(null);
+    const [value, setValue] = useState('');
     const [selectedMessage, setSelectedMessage] = useState<string | null>("");
     const [isDetailsPage, setIsDetailsPage] = useState(false); // Track if on details page
     const [detailsData, setDetailsData] = useState<any>(null); // Store details data
     const [loading, setLoading] = useState(false); // Track loading state
+    const whatsappLinkDetails =[
+        "Open WhatsApp on your phone",
+        "Tap Menu on Android, or Settings on iPhone",
+        "Tap Linked devices and then Link a device",
+        "Point your phone at this screen to scan the QR code"
+    ]
 
     const broadcastRows = [
         {
@@ -183,12 +191,97 @@ export default function Dashboard() {
                 </div>
             ) : (
                 // Dashboard Page
+
                 <div>
                     <h1 className="text-3xl font-bold text-gray-800">📊 Dashboard</h1>
+                    {/* Usage Information */}
+                    <section>
+                        <h2 className="text-2xl font-semibold text-gray-700 mb-4">Usage Information</h2>
+                        <div className="flex justify-center flex-row space-x-16 mb-6">
+                            <div className="grid  grid-cols-2 md:grid-cols-2 gap-x-10 gap-y-6">
+                                <Card className="flex" >
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center space-x-3">
+                                            <Send className="text-indigo-500 w-5 h-5" />
+                                            <div>
+                                                <p className="font-semibold text-xl text-gray-700">Message Sent</p>
+                                                <p className="text-lg font-semibold text-gray-500">150</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </Card>
+                                <Card className="flex" >
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center space-x-3">
+                                            <Clock className="text-yellow-500 w-5 h-5" />
+                                            <div>
+                                                <p className="font-semibold text-xl text-gray-700">Hours Used</p>
+                                                <p className="text-lg font-semibold text-gray-500">12 hrs</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </Card>
+                                <Card className="flex" >
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center space-x-3">
+                                            <Send className="text-red-500 w-5 h-5" />
+                                            <div>
+                                                <p className="font-semibold text-xl text-gray-700">Message Balance </p>
+                                                <p className="text-lg font-semibold text-gray-500">850 left</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </Card>
+                                <Card className="flex" >
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center space-x-3">
+                                            <Clock className="text-teal-500 w-5 h-5" />
+                                            <div>
+                                                <p className="font-semibold text-xl text-gray-700">Hours Left</p>
+                                                <p className="text-lg font-semibold text-gray-500">8 hrs</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                </Card>
+                            </div>
+                            <div>
+                                <Card>
+                                    <div className="space-y-2 flex flex-row">
+                                        <div className="flex flex-col space-y-4">
+                                            <h2 className="text-lg font-semibold text-gray-700">WhatsApp Link</h2>
+                                            {
+                                                whatsappLinkDetails.map((step, index) => (
+                                                    <div key={index} className="flex items-center space-x-3">
+                                                        <div className="flex items-center justify-center min-w-10 min-h-10 rounded-full bg-blue-100 text-blue-600">
+                                                            {index + 1}
+                                                        </div>
+                                                        <p className="text-gray-700 font-medium">{step}</p>
+                                                    </div>
+                                                ))
+                                            }
+                                        </div>
+                                        <div>
+                                            <QRCodeSVG
+                                                value={value}
+                                                size={250}
+                                                bgColor="#ffffff"
+                                                fgColor="#000000"
+                                                level="Q"
+                                                marginSize={4}
+                                            />
+                                        </div>
+                                    </div>
+
+                                </Card>
+                            </div>
+                        </div>
+                    </section>
+
                     <section>
                         <h2 className="text-2xl font-semibold text-gray-700 mb-4">Broadcast History</h2>
                         <Card>
-                            <div className="overflow-x-auto max-h-[50vh] overflow-y-auto">
+                            <div className="overflow-x-auto max-h-[40vh] overflow-y-auto">
                                 <table className="min-w-full text-sm text-gray-700">
                                     <thead className="bg-gray-200 text-left">
                                         <tr>
