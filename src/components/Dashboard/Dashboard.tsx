@@ -1,19 +1,26 @@
 import { useState } from "react";
 import { MessageCircle, ListOrdered, Paperclip, Send, Clock, CircleX, Eye, ChevronDown, CircleChevronDown, CircleChevronUp, ArrowLeft } from "lucide-react";
-
+import axios from "axios";
 import { Card } from "../Card";
 import { renderPreview } from "../util";
 import { NumberListModal } from "./NumberListModal";
+import { useUser } from '../../context/userState';
 import { QRCodeSVG } from "qrcode.react";
+import { RUN_ENGINE_URL } from '../../components/util';
+
 
 export default function Dashboard() {
+    const { user } = useUser()
     const [numberList, setNumberList] = useState<string[] | null>(null);
-    const [value, setValue] = useState('');
+    const [value, setValue] = useState('QRCODE');
+    const [isEngineStarted, setIsEngineStarted] = useState(false)
+    const [instanceId, setInstanceId] = useState("")
+    const [engineStatus, setEngineStatus] = useState("")
     const [selectedMessage, setSelectedMessage] = useState<string | null>("");
     const [isDetailsPage, setIsDetailsPage] = useState(false); // Track if on details page
     const [detailsData, setDetailsData] = useState<any>(null); // Store details data
     const [loading, setLoading] = useState(false); // Track loading state
-    const whatsappLinkDetails =[
+    const whatsappLinkDetails = [
         "Open WhatsApp on your phone",
         "Tap Menu on Android, or Settings on iPhone",
         "Tap Linked devices and then Link a device",
@@ -127,6 +134,44 @@ export default function Dashboard() {
         setIsDetailsPage(false);
         setDetailsData(null);
     };
+
+    const getInstanceStatus = async (instanceId: string) => {
+
+        const response = await axios.post(`${RUN_ENGINE_URL}/dev/message`, {
+            "action": "status",
+            "userId": user.email,
+            instanceId
+        });
+
+        if (response.status === 200 && response.data) {
+            const { statusCode } = response.data
+            if (statusCode === 201) {
+                console.log('got getInstanceStatus and publicUrl', response.data.publicUrl)
+                setEngineStatus(response.data.publicUrl)
+            }
+        }
+    }
+
+    const startInstance = async () => {
+        setIsEngineStarted(true);
+        try {
+            const response = await axios.post(`${RUN_ENGINE_URL}/dev/message`, {
+                "action": "create",
+                "userId": user.email
+            });
+
+            if (response.status === 200 && response.data) {
+                const { statusCode, instanceId } = response.data;
+                if (statusCode === 200) {
+                    console.log("Successfully started instance:", instanceId);
+                    setInstanceId(instanceId)
+                    setTimeout(() => getInstanceStatus(instanceId), 5000);
+                }
+            }
+        } catch (error) {
+            console.error('Error starting/stopping instance:', error);
+        }
+    }
 
     return (
         <div className="p-6 bg-gray-100 min-h-screen">
@@ -261,15 +306,27 @@ export default function Dashboard() {
                                                 ))
                                             }
                                         </div>
-                                        <div>
-                                            <QRCodeSVG
-                                                value={value}
-                                                size={250}
-                                                bgColor="#ffffff"
-                                                fgColor="#000000"
-                                                level="Q"
-                                                marginSize={4}
-                                            />
+                                        <div className="flex justify-center items-center">
+                                            {value === "QRCODE" ?
+                                                <>
+                                                    <button
+                                                        onClick={() => startInstance()}
+                                                        disabled={isEngineStarted}
+                                                        className={`ml-4 px-4 py-2 w-full ${isEngineStarted ? "bg-gray-400 cursor-not-allowed" : "bg-green-500 text-white"} font-semibold rounded-lg shadow-md hover:bg-green-700 transition`}
+                                                    >
+                                                        {isEngineStarted ? <div className="flex text-white"><svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                        </svg>Processing...</div> : "Get WhatsApp QR Code"}
+                                                    </button>
+                                                </> : <QRCodeSVG
+                                                    value={value}
+                                                    size={250}
+                                                    bgColor="#ffffff"
+                                                    fgColor="#000000"
+                                                    level="Q"
+                                                    marginSize={4}
+                                                />}
                                         </div>
                                     </div>
 
