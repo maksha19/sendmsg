@@ -1,12 +1,11 @@
 import { useState } from "react";
-import { MessageCircle, ListOrdered, Paperclip, Send, Clock, CircleX, Eye, ChevronDown, CircleChevronDown, CircleChevronUp, ArrowLeft } from "lucide-react";
+import {  Send, Clock  } from "lucide-react";
 import axios from "axios";
 import { Card } from "../Card";
-import { renderPreview } from "../util";
-import { NumberListModal } from "./NumberListModal";
 import { useUser } from '../../context/userState';
 import { QRCodeSVG } from "qrcode.react";
 import { RUN_ENGINE_URL } from '../../components/util';
+import Details from "./Details";
 
 
 export default function Dashboard() {
@@ -116,8 +115,8 @@ export default function Dashboard() {
 
     const chatDetails = Array.from({ length: 20 }, (_, index) => ({
         chatId: (index + 1).toString(),
-        chatMessage: `Sample message ${index + 1} - This is a detailed message for chat ${index + 1}.`,
-        numberList: Array.from({ length: 500 }, (_, i) => `+91 98765${i.toString().padStart(4, '0')}`),
+        chatMessage: `Sample message ${index + 1} - This is a detailed message for chat ${index + 1}. It contains information about the chat, including the purpose, context, and any relevant details that might be useful for the user. The message is designed to provide clarity and ensure that the recipient understands the intent behind the communication. Additionally, this message serves as a placeholder for more specific content that can be customized based on the user's needs or preferences.`,
+        numberList: Array.from({ length: 500 }, (_, i) => ({ "number": `+91 98765${i.toString().padStart(4, '0')}`, "name": `User dsadsaddfsfcsdf dsadsaddfsfcsdfdsadsaddfsfcsdf dsadsaddfsfcsdf${i + 1}` })),
         attachment: `attachment_${index + 1}.pdf`
     }));
 
@@ -204,36 +203,7 @@ export default function Dashboard() {
                 </div>
             ) : (isDetailsPage && detailsData) ? (
                 // Details Page
-                <div>
-                    <button
-                        onClick={handleBackToDashboard}
-                        className="inline-flex items-center gap-2 mb-4 px-5 py-2.5 rounded-full bg-white text-blue-600 border border-blue-600 shadow-sm hover:bg-blue-50 hover:text-blue-700 transition-all duration-200"
-                    >
-                        <ArrowLeft className="w-4 h-4" />
-                        Back to Dashboard
-                    </button>
-
-                    <h2 className="text-2xl font-semibold text-gray-700 mb-4">Details Page</h2>
-                    <Card>
-                        <div className="p-4">
-                            <h3 className="text-lg font-bold text-gray-800">{detailsData.chatTitle}</h3>
-                            <p className="text-gray-600">{detailsData.chatDescription}</p>
-                            <div className="flex justify-between items-center">
-                                <h3 className="text-lg font-semibold">📨 Chat Message</h3>
-                            </div>
-                            <div className="p-3 rounded-lg max-w-xl w-full ">
-                                <div
-                                    className="w-full min-h-96 p-4 overflow-auto bg-gray-50 border whitespace-pre-wrap  border-gray-300 rounded-lg shadow-inner preview text-gray-800"
-                                    dangerouslySetInnerHTML={renderPreview(detailsData["chatMessage"])}
-                                />
-                            </div>
-                            <div className="flex mt-2 items-center space-x-4">
-                                <Paperclip className="text-purple-500 w-6 h-6" />
-                                <p className="font-medium text-gray-700">Attachment</p>
-                            </div>
-                        </div>
-                    </Card>
-                </div>
+                <Details handleBackToDashboard={handleBackToDashboard} detailsData={detailsData}/>
             ) : (
                 // Dashboard Page
 
