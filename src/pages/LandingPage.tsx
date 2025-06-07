@@ -258,7 +258,7 @@ const LandingPage = () => {
                 </div>
             </section>
 
-            <TestimonialSection />
+            {/* <TestimonialSection /> */}
             {/* Closing Section */}
             <section className="bg-gradient-to-r from-blue-500 to-purple-500 text-white py-16  text-center">
                 <h2 className="text-4xl p-4 font-bold font-poppins">
